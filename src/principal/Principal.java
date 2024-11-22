@@ -18,7 +18,12 @@ public class Principal {
 		// listadoPersonas24y32();
 		// listadoPersonasMas65();
 		// AccesoDatos.crearColumnaLaboral();
-		AccesoDatos.insertarLaboral();
+		// AccesoDatos.insertarLaboral();
+
+		// Se me ocurre hacer una consulta que seleccione los ocupados que esten entre 30 y 40 años,
+		// que su nombre comience por M y su apellido termine en O, ordenados por su apellido
+		listadoPersonalizado();
+
 	}
 
 	public static void insertar() {
@@ -81,6 +86,12 @@ public class Principal {
 		List<Persona> personas = AccesoDatos.getPersonasEx("*", "", "edad > 65");
 
 		pintaTablaCompleta(personas, "PERSONAS MÁS DE 65 AÑOS");
+	}
+
+	private static void listadoPersonalizado() {
+		List<Persona> personas = AccesoDatos.getPersonasEx("*", "apellido", "(laboral like 'ocupado') and (edad between 30 and 40) and (nombre like 'm%') and (apellido like '%o')");
+
+		pintaTablaCompleta(personas, "PERSONAS OCUPADA ENTRE 30 Y 40 AÑOS\n"+" ".repeat(20)+"SU NOMBRE EMPIEZA POR M\n" +" ".repeat(20)+"Y SU APELLIDO ACABA POR O");
 	}
 
 	public static void pintaTablaCompleta(List<Persona> personas, String titulo) {
