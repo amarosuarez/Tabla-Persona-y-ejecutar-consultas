@@ -17,7 +17,6 @@ public class AccesoDatos {
 
     /**
      * Función que obtiene una lista de personas
-     * 
      * @return Lista de personas
      */
     private static List<Persona> getPersonas() {
@@ -232,7 +231,6 @@ public class AccesoDatos {
 
     /**
      * Función que comprueba si una tabla existe
-     * 
      * @param nombreTabla Nombre de la tabla a comprobar
      * @return True si existe o false si no
      */
@@ -399,26 +397,27 @@ public class AccesoDatos {
     }
 
     /**
-     * Función que realiza una consulta con campos, order y where especificado por parámetros y devuelve una lista de personas
+     * Función que realiza una consulta con campos, order y where especificado por
+     * parámetros y devuelve una lista de personas
      * @param campos Campos a obtener
-     * @param order Regla order by
-     * @param where Regla where
+     * @param order  Regla order by
+     * @param where  Regla where
      * @return Lista de personas
      */
     public static List<Persona> getPersonasEx(String campos, String order, String where) {
         PreparedStatement stmt = null;
         Connection conector = null;
         ResultSet resultSet = null;
-    
+
         // Lista para almacenar las personas
         List<Persona> personas = new ArrayList<>();
-    
+
         try {
             conector = ConexionDB.connect();
-            // Seleccionar la base de datos
+            // Selecciono la base de datos
             conector.createStatement().executeUpdate(useDB);
-    
-            // Construir la consulta dinámica
+
+            // Construyo la consulta dinámica
             String sql = "SELECT " + campos + " FROM Persona";
             if (!where.isEmpty()) {
                 sql += " WHERE " + where;
@@ -426,23 +425,24 @@ public class AccesoDatos {
             if (!order.isEmpty()) {
                 sql += " ORDER BY " + order;
             }
-    
-            // Ejecutar la consulta
+
+            // Ejecuto la consulta
             stmt = conector.prepareStatement(sql);
             resultSet = stmt.executeQuery();
-    
-            // Obtener metadatos para saber cuántas columnas hay
+
+            // Obtengo los metadatos para saber cuántas columnas hay
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnCount = metaData.getColumnCount();
-    
+
             // Procesar el resultado dinámicamente
             while (resultSet.next()) {
                 Persona persona = new Persona();
-    
+
                 // Asignar valores dinámicamente
                 for (int i = 1; i <= columnCount; i++) {
+                    // Obtengo el nombre de la columna en minúsculas
                     String columnName = metaData.getColumnName(i).toLowerCase();
-    
+
                     // Asignar según el nombre de la columna
                     switch (columnName) {
                         case "id":
@@ -459,11 +459,10 @@ public class AccesoDatos {
                             break;
                     }
                 }
-    
+
                 personas.add(persona);
             }
-    
-            
+
         } catch (SQLException se) {
             se.printStackTrace();
         } catch (Exception e) {
@@ -480,24 +479,31 @@ public class AccesoDatos {
                 System.out.println("No se ha podido cerrar la conexión.");
             }
         }
-    
+
         return personas;
     }
-    
 
+    /**
+     * Función que realiza una consulta con campos, order y where especificado por
+     * parámetros y devuelve una lista de personas
+     * @param campos Campos a obtener
+     * @param order Regla order by
+     * @param where Regla where
+     * @return Double (como la media de la edad)
+     */
     public static double getMediaEdad(String campos, String order, String where) {
         PreparedStatement stmt = null;
         Connection conector = null;
         ResultSet resultSet = null;
-    
-        double media = 0;
-    
+
+        double result = 0;
+
         try {
             conector = ConexionDB.connect();
-            // Seleccionar la base de datos
+            // Selecciono la base de datos
             conector.createStatement().executeUpdate(useDB);
-    
-            // Construir la consulta dinámica
+
+            // Construyo la consulta dinámica
             String sql = "SELECT " + campos + " FROM Persona";
             if (!where.isEmpty()) {
                 sql += " WHERE " + where;
@@ -505,16 +511,16 @@ public class AccesoDatos {
             if (!order.isEmpty()) {
                 sql += " ORDER BY " + order;
             }
-    
-            // Ejecutar la consulta
+
+            // Ejecuto la consulta
             stmt = conector.prepareStatement(sql);
             resultSet = stmt.executeQuery();
-    
-            // Procesar el resultado dinámicamente
+
+            // Proceso el resultado dinámicamente
             while (resultSet.next()) {
-                media = resultSet.getDouble(1);
+                result = resultSet.getDouble(1);
             }
-    
+
         } catch (SQLException se) {
             se.printStackTrace();
         } catch (Exception e) {
@@ -531,8 +537,81 @@ public class AccesoDatos {
                 System.out.println("No se ha podido cerrar la conexión.");
             }
         }
-    
-        return media;
+
+        return result;
     }
 
+    /**
+     * Función que añade la columna laboral a la tabla Persona, con reestricciones
+     */
+    public static void crearColumnaLaboral() {
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = ConexionDB.connect();
+            conn.createStatement().executeUpdate(useDB);
+            stmt = conn.createStatement();
+            String sql = "ALTER TABLE Persona ADD COLUMN laboral VARCHAR(100) CHECK (laboral IN ('estudiante', 'ocupado', 'parado', 'jubilado'));";
+            stmt.executeUpdate(sql);
+            System.out.println("Columna creada");
+        } catch (SQLException se) {
+            // Gestionamos los posibles errores que puedan surgir durante la ejecución de la
+            // inserción
+            se.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Se ha producido un error.");
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException se) {
+                System.out.println("No se ha podido cerrar la conexión.");
+            }
+        }
+    }
+
+    /**
+     * Función que inserta los datos en la columna laboral de la tabla Personas, según
+     * los requisitos
+     */
+    public static void insertarLaboral() {
+        Connection conn = null;
+        Statement stmt = null;
+        try {
+            conn = ConexionDB.connect();
+            conn.createStatement().executeUpdate(useDB);
+            stmt = conn.createStatement();
+            String sql = "UPDATE Persona SET laboral ="
+                    + "CASE\n" +
+                    " WHEN edad < 18 THEN 'estudiante'\n" +
+                    " WHEN edad > 65 THEN 'jubilado'\n" +
+                    " WHEN edad BETWEEN 18 AND 65 AND edad % 2 = 1 THEN 'parado'\n" +
+                    " ELSE 'ocupado'\n" +
+                    "END";
+
+            stmt.executeUpdate(sql);
+            System.out.println("Modificado");
+        } catch (SQLException se) {
+            // Gestionamos los posibles errores que puedan surgir durante la ejecución de la
+            // inserción
+            se.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("Se ha producido un error.");
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException se) {
+                System.out.println("No se ha podido cerrar la conexión.");
+            }
+        }
+    }
 }

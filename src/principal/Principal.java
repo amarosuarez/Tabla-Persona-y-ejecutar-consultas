@@ -17,6 +17,8 @@ public class Principal {
 		// listadoApellidosOhMa();
 		// listadoPersonas24y32();
 		// listadoPersonasMas65();
+		// AccesoDatos.crearColumnaLaboral();
+		AccesoDatos.insertarLaboral();
 	}
 
 	public static void insertar() {
